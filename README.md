@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuaca: Media Pembelajaran Interaktif</title>
+    <!-- Memuat Tailwind CSS untuk styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Konfigurasi Tailwind untuk menggunakan font Inter -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'sky-blue': '#87CEEB',
+                        'sun-yellow': '#FFD700',
+                        'cloud-gray': '#D3D3D3',
+                        'rain-blue': '#4682B4',
+                        'wind-white': '#F0F8FF',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Menggunakan font Inter secara default */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Background lembut */
+        }
+        /* Efek hover pada kartu */
+        .weather-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .weather-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Styling Drag and Drop */
+        .dropzone {
+            min-height: 100px;
+            border: 2px dashed #9ca3af;
+            background-color: #f9fafb;
+            transition: background-color 0.2s;
+        }
+        .dropzone.drag-over {
+            background-color: #e0f2fe; /* Warna biru muda saat item di atas */
+            border-color: #3b82f6;
+        }
+        .draggable-item {
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.1s;
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- Header Aplikasi -->
+    <header class="text-center mb-8 bg-white p-6 rounded-xl shadow-lg">
+        <h1 class="text-3xl md:text-4xl font-extrabold text-blue-800">☀️ Kenali Jenis-Jenis Cuaca 🌧️</h1>
+        <p class="mt-2 text-lg text-gray-600">Media Pembelajaran Interaktif IPAS Kelas III</p>
+    </header>
+
+    <!-- Konten Utama: Pilihan Cuaca -->
+    <main class="max-w-6xl mx-auto">
+        
+        <!-- Bagian Materi & Detail Cuaca -->
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 border-l-4 border-blue-500 pl-3">Pilih Jenis Cuaca (Materi):</h2>
+        <div id="weather-selection" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <!-- Kartu Cuaca akan di-generate oleh JS -->
+        </div>
+
+        <!-- Pemisah -->
+        <div class="my-10 h-1 bg-blue-200 rounded-full"></div>
+
+        <!-- Bagian Game Interaktif: Tebak Pasangan Aktivitas Cuaca -->
+        <div class="mt-12 bg-white p-6 rounded-xl shadow-2xl border-4 border-green-500">
+            <h2 class="text-3xl font-bold text-green-700 mb-4 text-center">🎮 Game: Pasangkan Aktivitas!</h2>
+            <p class="text-center text-gray-600 mb-6">Seret (Drag) kartu aktivitas ke kotak cuaca yang paling sesuai.</p>
+            
+            <div id="game-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- Target Dropzone: Cuaca Cerah -->
+                <div class="p-4 bg-yellow-50 rounded-lg border-2 border-yellow-400">
+                    <h3 class="text-xl font-bold text-yellow-700 mb-3 text-center">Cuaca Cerah 🌞</h3>
+                    <div id="target-cerah" data-correct="menjemur,bermain bola,piknik" class="dropzone p-3 rounded-md flex flex-wrap gap-2 items-center justify-center">
+                        <p class="text-sm text-gray-400">Seret kartu ke sini...</p>
+                    </div>
+                </div>
+
+                <!-- Target Dropzone: Cuaca Hujan -->
+                <div class="p-4 bg-blue-50 rounded-lg border-2 border-blue-400">
+                    <h3 class="text-xl font-bold text-blue-700 mb-3 text-center">Cuaca Hujan ☔</h3>
+                    <div id="target-hujan" data-correct="membaca,minum hangat,tidur" class="dropzone p-3 rounded-md flex flex-wrap gap-2 items-center justify-center">
+                        <p class="text-sm text-gray-400">Seret kartu ke sini...</p>
+                    </div>
+                </div>
+
+                <!-- Target Dropzone: Cuaca Berangin -->
+                <div class="p-4 bg-gray-100 rounded-lg border-2 border-gray-400">
+                    <h3 class="text-xl font-bold text-gray-700 mb-3 text-center">Cuaca Berangin 🌬️</h3>
+                    <div id="target-berangin" data-correct="layangan,perahu layar,penerbangan" class="dropzone p-3 rounded-md flex flex-wrap gap-2 items-center justify-center">
+                        <p class="text-sm text-gray-400">Seret kartu ke sini...</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mt-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-3 text-center">Kartu Aktivitas</h3>
+                <div id="activity-cards-container" class="flex flex-wrap gap-3 justify-center p-4 bg-gray-100 rounded-lg shadow-inner">
+                    <!-- Kartu Aktivitas akan di-generate oleh JS -->
+                </div>
+            </div>
+
+            <!-- Area Hasil dan Tombol Cek -->
+            <div class="mt-8 text-center">
+                <button id="check-game-btn" class="px-8 py-3 bg-green-600 text-white font-bold rounded-full text-lg hover:bg-green-700 transition duration-150 shadow-lg">
+                    CEK JAWABAN!
+                </button>
+                <div id="game-result" class="mt-4 p-4 text-white font-bold rounded-lg hidden"></div>
+            </div>
+        </div>
+        
+    </main>
+
+    <!-- Detail Cuaca (Modal) - Ditempatkan di luar main agar z-index bekerja -->
+    <div id="weather-detail-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full transform transition-all duration-300 scale-95 opacity-0" id="modal-content-container">
+            
+            <!-- Header Modal -->
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-blue-100 rounded-t-xl">
+                <h3 id="detail-title" class="text-2xl font-bold text-blue-800"></h3>
+                <button id="close-modal-btn" class="text-gray-600 hover:text-gray-900 text-3xl font-light leading-none">&times;</button>
+            </div>
+
+            <!-- Konten Detail -->
+            <div class="p-6">
+                <div id="detail-icon" class="text-6xl text-center mb-4"></div>
+                <p id="detail-description" class="text-gray-700 text-base leading-relaxed"></p>
+                
+                <h4 class="font-semibold text-lg mt-4 text-gray-700">Contoh Dampak & Aktivitas:</h4>
+                <p id="detail-activity" class="text-sm italic text-green-700 mt-1 p-2 bg-green-50 rounded-lg border-l-4 border-green-400"></p>
+
+                <h4 class="font-semibold text-lg mt-4 text-gray-700">Perhatikan! (Prediksi Cuaca):</h4>
+                <p id="detail-prediction" class="text-sm text-red-700 mt-1 p-2 bg-red-50 rounded-lg border-l-4 border-red-400"></p>
+            </div>
+
+            <!-- Footer Modal -->
+            <div class="p-4 border-t border-gray-200 text-right">
+                <button onclick="closeModal()" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition duration-150">Tutup</button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-sm text-gray-500">
+        <p>&copy; 2025 Media Pembelajaran Cuaca. Berdasarkan Modul Ajar IPAS Kelas III.</p>
+    </footer>
+
+    <script>
+        // Data Cuaca berdasarkan Modul Ajar
+        const weatherData = [
+            { id: 'cerah', name: 'Cuaca Cerah', icon: '☀️', color: 'bg-yellow-200', borderColor: 'border-yellow-600', 
+              description: 'Ditandai dengan sinar matahari yang terang dan suasana yang jelas. Langit tampak biru bersih, kadang dihiasi oleh awan tipis putih seperti kapas.',
+              activity: 'Cocok untuk menjemur pakaian/hasil panen, berolahraga di luar ruangan, dan bepergian.',
+              prediction: 'Langit biru bersih dan awan tipis biasanya menunjukkan cuaca akan tetap baik.' },
+            { id: 'panas', name: 'Cuaca Panas', icon: '🔥', color: 'bg-red-200', borderColor: 'border-red-600', 
+              description: 'Terjadi di musim kemarau, intensitas sinar matahari sangat tinggi, terutama pada siang hari, membuat udara terasa sangat panas.',
+              activity: 'Sebaiknya hindari aktivitas berat di luar ruangan, minum air yang banyak, dan gunakan topi/tabir surya.',
+              prediction: 'Suhu tinggi di siang hari menunjukkan kemungkinan cuaca panas berlanjut. Perlu waspada dehidrasi.' },
+            { id: 'berawan', name: 'Cuaca Berawan', icon: '☁️', color: 'bg-gray-300', borderColor: 'border-gray-600', 
+              description: 'Kondisi di mana langit tampak mendung atau dipenuhi awan, sering kali menutupi sinar matahari. Keadaan ini membuat suasana lebih gelap dan udara terasa lebih sejuk.',
+              activity: 'Cocok untuk belajar di luar rumah, bermain layangan (jika berangin), atau jalan-jalan santai.',
+              prediction: 'Jika awan semakin tebal dan gelap, kemungkinan besar akan terjadi hujan!' },
+            { id: 'dingin', name: 'Cuaca Dingin', icon: '🥶', color: 'bg-indigo-200', borderColor: 'border-indigo-600',
+              description: 'Disebabkan oleh kelembapan udara yang tinggi, angin kencang, dan suhu udara yang rendah. Biasanya terjadi di daerah dataran tinggi atau pegunungan.',
+              activity: 'Kenakan pakaian tebal atau jaket, minum minuman hangat, dan beraktivitas di dalam ruangan.',
+              prediction: 'Jika suhu terus turun dan angin kencang, cuaca dingin akan bertahan. Jaga kesehatan tubuh.' },
+            { id: 'hujan', name: 'Cuaca Hujan', icon: '🌧️', color: 'bg-blue-300', borderColor: 'border-blue-700', 
+              description: 'Sering terjadi di negara tropis. Berasal dari uap air di udara yang menguap karena pemanasan matahari, yang kemudian menjadi presipitasi (tetesan air).',
+              activity: 'Sangat disarankan beraktivitas di dalam rumah, membaca buku, atau membantu orang tua di dapur. Jangan lupa bawa payung/jas hujan jika harus keluar.',
+              prediction: 'Awan tebal (Cumulonimbus) dan mendung gelap adalah tanda hujan sudah dekat atau sedang terjadi.' },
+            { id: 'berangin', name: 'Cuaca Berangin', icon: '🌬️', color: 'bg-green-200', borderColor: 'border-green-600', 
+              description: 'Terjadi ketika udara berhembus dengan cepat. Udara yang bergerak cepat disebut angin, dan saat angin berhembus pelan, menghasilkan hembusan udara yang lembut.',
+              activity: 'Cocok untuk bermain layangan. Hati-hati dengan benda-benda ringan yang bisa terbawa angin kencang.',
+              prediction: 'Pergerakan awan yang cepat di langit juga bisa menjadi indikasi cuaca berangin.' }
+        ];
+
+        const activityItems = [
+            { id: 'menjemur', text: 'Menjemur Pakaian', icon: '🧺', correctTarget: 'cerah' },
+            { id: 'membaca', text: 'Membaca Buku', icon: '📖', correctTarget: 'hujan' },
+            { id: 'layangan', text: 'Bermain Layangan', icon: '🪁', correctTarget: 'berangin' },
+            { id: 'bermain bola', text: 'Bermain Bola', icon: '⚽', correctTarget: 'cerah' },
+            { id: 'minum hangat', text: 'Minum Cokelat Hangat', icon: '☕', correctTarget: 'hujan' },
+            { id: 'piknik', text: 'Piknik di Taman', icon: '🧺', correctTarget: 'cerah' },
+            { id: 'perahu layar', text: 'Mengendalikan Perahu Layar', icon: '⛵', correctTarget: 'berangin' },
+            { id: 'tidur', text: 'Tidur Siang', icon: '😴', correctTarget: 'hujan' },
+            { id: 'penerbangan', text: 'Penerbangan Drone', icon: '🚁', correctTarget: 'berangin' },
+        ];
+
+
+        /* ========================================
+        FUNGSI MATERI (MODAL)
+        ========================================
+        */
+
+        // Fungsi untuk menampilkan modal detail cuaca
+        function showDetail(weather) {
+            document.getElementById('detail-title').textContent = weather.name;
+            document.getElementById('detail-icon').textContent = weather.icon;
+            document.getElementById('detail-description').textContent = weather.description;
+            document.getElementById('detail-activity').textContent = weather.activity;
+            document.getElementById('detail-prediction').textContent = weather.prediction;
+            
+            const modal = document.getElementById('weather-detail-modal');
+            const modalContent = document.getElementById('modal-content-container');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        // Fungsi untuk menutup modal
+        function closeModal() {
+            const modal = document.getElementById('weather-detail-modal');
+            const modalContent = document.getElementById('modal-content-container');
+
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Fungsi untuk membuat kartu cuaca di bagian materi
+        function createWeatherCards() {
+            const container = document.getElementById('weather-selection');
+            
+            weatherData.forEach(weather => {
+                const card = document.createElement('div');
+                card.className = `weather-card cursor-pointer p-4 text-center rounded-xl shadow-md ${weather.color} hover:shadow-xl border-b-4 ${weather.borderColor} border-opacity-70 transition duration-300 ease-in-out`;
+                
+                card.innerHTML = `
+                    <p class="text-4xl mb-2">${weather.icon}</p>
+                    <p class="text-lg font-semibold text-gray-800">${weather.name}</p>
+                    <p class="text-xs text-gray-600 mt-1">(Klik untuk detail)</p>
+                `;
+                
+                card.onclick = () => showDetail(weather);
+                container.appendChild(card);
+            });
+        }
+        
+        // Menambahkan event listener untuk tombol tutup modal
+        document.getElementById('close-modal-btn').onclick = closeModal;
+
+        // Tutup modal jika user klik di luar konten (di latar belakang)
+        document.getElementById('weather-detail-modal').addEventListener('click', function(e) {
+            if (e.target.id === 'weather-detail-modal') {
+                closeModal();
+            }
+        });
+
+
+
+        /* ========================================
+        FUNGSI GAME (DRAG & DROP)
+        ========================================
+        */
+
+        // Fungsi untuk membuat kartu aktivitas (draggable)
+        function createActivityCards() {
+            const container = document.getElementById('activity-cards-container');
+            
+            // Mengacak urutan kartu agar lebih menantang
+            const shuffledItems = activityItems.sort(() => Math.random() - 0.5);
+
+            shuffledItems.forEach(item => {
+                const card = document.createElement('div');
+                card.id = `item-${item.id}`;
+                card.className = 'draggable-item px-4 py-2 bg-white rounded-full shadow-md text-sm font-semibold text-gray-800 border-2 border-gray-300 hover:bg-gray-50';
+                card.textContent = `${item.icon} ${item.text}`;
+                card.draggable = true;
+                card.dataset.correctTarget = item.correctTarget;
+                
+                // Event listener drag
+                card.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', e.target.id);
+                    // Tambahkan sedikit efek visual saat drag
+                    e.target.classList.add('opacity-50');
+                });
+                card.addEventListener('dragend', (e) => {
+                    // Hilangkan efek visual saat drag selesai
+                    e.target.classList.remove('opacity-50');
+                });
+
+                container.appendChild(card);
+            });
+        }
+
+        // Inisialisasi Dropzones
+        function setupDropzones() {
+            const dropzones = document.querySelectorAll('.dropzone');
+            
+            dropzones.forEach(dropzone => {
+                // Untuk mencegah perilaku default browser
+                dropzone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropzone.classList.add('drag-over');
+                });
+                
+                // Menghilangkan highlight saat item keluar
+                dropzone.addEventListener('dragleave', () => {
+                    dropzone.classList.remove('drag-over');
+                });
+
+                // Saat item dijatuhkan
+                dropzone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropzone.classList.remove('drag-over');
+                    
+                    const data = e.dataTransfer.getData('text/plain');
+                    const draggedElement = document.getElementById(data);
+                    
+                    // Hapus pesan "Seret kartu ke sini..." jika ada
+                    const placeholder = dropzone.querySelector('p.text-gray-400');
+                    if (placeholder) {
+                        placeholder.remove();
+                    }
+
+                    // Pindahkan elemen yang di-drag ke dropzone baru
+                    dropzone.appendChild(draggedElement);
+                });
+            });
+        }
+
+        // Fungsi untuk memeriksa jawaban game
+        document.getElementById('check-game-btn').addEventListener('click', () => {
+            let correctCount = 0;
+            let totalCards = activityItems.length;
+            const resultDiv = document.getElementById('game-result');
+            resultDiv.classList.remove('hidden', 'bg-red-500', 'bg-green-500', 'bg-yellow-500');
+            
+            // Reset tampilan kartu
+            document.querySelectorAll('.draggable-item').forEach(card => {
+                card.classList.remove('bg-green-200', 'bg-red-200');
+            });
+
+            // Iterasi melalui semua dropzone (target)
+            const dropzones = document.querySelectorAll('.dropzone');
+            dropzones.forEach(dropzone => {
+                const targetId = dropzone.id.replace('target-', ''); // cerah, hujan, berangin
+                
+                // Ambil semua kartu aktivitas yang ada di dropzone ini
+                const droppedCards = dropzone.querySelectorAll('.draggable-item');
+                
+                droppedCards.forEach(card => {
+                    const isCorrect = card.dataset.correctTarget === targetId;
+                    
+                    if (isCorrect) {
+                        correctCount++;
+                        card.classList.add('bg-green-200'); // Warna hijau jika benar
+                    } else {
+                        card.classList.add('bg-red-200'); // Warna merah jika salah
+                    }
+                });
+            });
+
+            // Tampilkan hasil
+            const score = (correctCount / totalCards) * 100;
+            let message = '';
+
+            if (score === 100) {
+                message = `🎉 SELAMAT! Jawabanmu BENAR SEMUA (${correctCount}/${totalCards}). Kamu sudah menguasai materi ini!`;
+                resultDiv.classList.add('bg-green-500');
+            } else if (score >= 50) {
+                message = `👍 BAGUS! Kamu benar ${correctCount} dari ${totalCards} soal. Perhatikan lagi kartu yang masih berwarna merah!`;
+                resultDiv.classList.add('bg-yellow-500');
+            } else {
+                message = `😔 Coba lagi ya! Kamu benar ${correctCount} dari ${totalCards} soal. Baca kembali materi di atas. Semangat!`;
+                resultDiv.classList.add('bg-red-500');
+            }
+
+            resultDiv.textContent = message;
+            resultDiv.classList.remove('hidden');
+        });
+
+
+        // Inisialisasi semua fungsi saat jendela dimuat
+        window.onload = function() {
+            createWeatherCards();
+            createActivityCards();
+            setupDropzones();
+        };
+
+    </script>
+</body>
+</html>
+
